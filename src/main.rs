@@ -4,12 +4,12 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufReader;
 
-/// 호출 관계를 저장할 자료 구조
+// 호출 관계를 저장할 자료 구조
 type CallGraph = HashMap<String, Vec<String>>;
 
 #[derive(Deserialize)]
 struct CompileCommand {
-    directory: String,
+    // directory: String,
     command: String,
     file: String,
 }
@@ -47,8 +47,14 @@ fn filter_arguments(command: &str) -> Vec<String> {
 fn traverse_entity(entity: &clang::Entity, call_graph: &mut CallGraph, current_function: Option<&str>) {
     if entity.get_kind() == clang::EntityKind::FunctionDecl {
         if let Some(name) = entity.get_name() {
+
+            let filepath = entity.get_location().unwrap().get_file_location().file;
+            let filepath_str = filepath.map_or("".to_string(), |f| f.get_path().to_str().unwrap().to_string());
+            let lineno = entity.get_location().unwrap().get_file_location().line;
+
             // 새로운 함수 선언을 발견하면 현재 함수를 업데이트
-            let name_str = name.to_string();
+            let name_str = name.to_string() + " (" + &filepath_str + ":" + &lineno.to_string() + ")";
+
             call_graph.entry(name_str.clone()).or_default();
             for child in entity.get_children() {
                 traverse_entity(&child, call_graph, Some(&name_str));
