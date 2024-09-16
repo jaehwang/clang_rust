@@ -43,6 +43,11 @@ fn filter_arguments(command: &str) -> Vec<String> {
     args
 }
 
+fn get_callee_name(entity: &clang::Entity) -> Option<String> {
+    let function = entity.get_reference()?;
+    return function.get_name();
+}
+
 // entity를 traverse하는 함수
 fn traverse_entity(entity: &clang::Entity, call_graph: &mut CallGraph, current_function: Option<&str>) {
     if entity.get_kind() == clang::EntityKind::FunctionDecl {
@@ -61,11 +66,9 @@ fn traverse_entity(entity: &clang::Entity, call_graph: &mut CallGraph, current_f
             }
         }
     } else if entity.get_kind() == clang::EntityKind::CallExpr {
-        if let Some(function) = entity.get_reference() {
-            if let Some(callee_name) = function.get_name() {
-                if let Some(caller_name) = current_function {
-                    call_graph.entry(caller_name.to_string()).or_default().push(callee_name.to_string());
-                }
+        if let Some(callee_name) = get_callee_name(entity) {
+            if let Some(caller_name) = current_function {
+                call_graph.entry(caller_name.to_string()).or_default().push(callee_name.to_string());
             }
         }
     } else {
