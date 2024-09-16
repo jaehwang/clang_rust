@@ -89,8 +89,16 @@ fn print_call_graph(call_graph: &CallGraph) {
 }
 
 fn main() {
+    // parse command line arguments: compile_commands.json
+    let args: Vec<String> = std::env::args().collect();
+    if args.len() != 2 {
+        eprintln!("Usage: {} <compile_commands.json>", args[0]);
+        std::process::exit(1);
+    }
+    let compile_commands_json = &args[1];
+
     // compile_commands.json 파일 파싱
-    let compile_commands = parse_compile_commands("compile_commands.json");
+    let compile_commands = parse_compile_commands(compile_commands_json);
 
     // Clang 인스턴스 생성
     let clang = Clang::new().unwrap();
